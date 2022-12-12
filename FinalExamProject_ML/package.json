@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "hackernews-api": "^1.0.0",
+    "http": "^0.0.1-security",
+    "mongodb": "^4.12.1",
+    "spotify-api.js": "^9.2.5"
+  }
+}

@@ -1,3 +1,4 @@
+process.stdin.setEncoding("utf8");
 const path = require("path");
 var hn = require('hackernews-api');
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -6,6 +7,7 @@ const app = express();
 const portNumber = 5000;
 const bodyParser = require("body-parser");
 const { response } = require('express');
+
 
 app.use(bodyParser.urlencoded({extended:false}));
 require("dotenv").config({ path: path.resolve(__dirname, 'credentialsDontPost/.env') })  
@@ -17,6 +19,28 @@ const uri = `mongodb+srv://${userName}:${password}@cluster0.qbkiy4o.mongodb.net/
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 app.use(express.static(__dirname + '/templates'));
+
+
+const prompt = "Type stop to shutdown the server: ";
+console.log(`Web server is running at http://localhost:${portNumber}`);
+process.stdout.write(prompt);
+
+
+process.stdin.on("readable", function () {
+	let dataInput = process.stdin.read();
+	if (dataInput !== null) {
+	  let command = dataInput.trim();
+
+    if (command === "stop") {
+			process.stdout.write("Shutting down the server\n");
+			process.exit(0);
+	  } else{
+		process.stdout.write("Invalid command: " + command + "\n");
+	  }
+	  	 process.stdout.write(prompt);
+	  	 process.stdin.resume();
+	}
+});
 
 
 async function insertData(client, databaseAndCollection, data) {
@@ -46,6 +70,7 @@ function getStoriesBasedOnKey(serach){
 
         }
     }
+    
     const data = {
         keyword: serach,
         instances: stories.length,
@@ -59,8 +84,7 @@ function getStoriesBasedOnKey(serach){
     
 }
 
-app.set("views", path.resolve(__dirname, "templates"));
-app.set("view engine", "ejs");
+
 
 app.get("/", (request, response) => {
     response.render("index");
@@ -72,28 +96,22 @@ app.get("/keyword", (request, response) => {
 
 
 app.post("/keyword", (request, response) => {
-    
     let key = request.body.key;
+    let stories = getStoriesBasedOnKey(key);
+    
+    let table = "<table border=\"1\"><th>Data</th><th>Info</th>";
 
-    const data = getStoriesBasedOnKey(key);
-    let table = "<table border = \"1\"><th>Data</th><th>Info</th>";
+    table += "<tr><td> keyword </td><td>" + stories.keyword + "</td></tr>";
+    table += "<tr><td> instances </td><td>" + stories.instances + "</td></tr>";
+    table += "<tr><td> date </td><td>" + stories.date + "</td></tr>";
+    table += "<tr><td> titles </td><td>There are "+ stories.titles.length + " stories</td></tr></table>";
 
-    table += "<tr><td><strong> Keyword  </strong> </td><td>" + data.keyword + "</td></tr>";
-    table += "<tr><td><strong> Instances  </strong></td><td>" + data.instances + "</td></tr>";
-    table += "<tr><td><strong> Date </strong></td><td>" + data.date + "</td></tr>";
-
-
-    table += "<tr><td> <strong>Titles </strong></td><td>There are "+ data.titles.length+ " stories</td></tr>";
-
-    for(var i = 0; i < data.titles.length; i++){
-
-        table += "<tr><td><strong>  Story" + (i+1) + "</strong></td><td>" + data.titles[i];
+    let table2 = "<table border=\"1\"><tr><th>Story Titles</th></tr>"
+    for(title of stories.titles) {
+        table2 += "<tr><td>" + title + "</td></tr>";
     }
-
-
-    table += "</table>";
-    response.render("afterSearch", {table: table});
-
+    table2 += "</table>";
+    response.render("afterSearch", {table: table, table2: table2});
 });
 
 app.get("/clear", (request, response) => {
@@ -130,6 +148,46 @@ app.get("/getDate", (request, response) => {
     response.render("getDate");
 });
 
+app.post("/getDatePost", (request, response) => {
+    let date = request.body.dateList;
+    search();
 
+    async function search() {
+        try{
+            await client.connect();
+                let filter = {date : { $eq: date}};
+                const cursor = client.db(databaseAndCollection.db)
+                        .collection(databaseAndCollection.collection)
+                        .find(filter);
+                const result = await cursor.toArray();
+
+                let table = "<table border=\"1\"><tr><th>Keyword</th><th>Count</th></tr>"
+                let keyWordSet = new Set();
+                for(story of result) {
+                    let keyword = story.keyword;
+                    let count = story.titles.length;
+                   
+                    if(!keyWordSet.has(keyword)){
+                        table += `<tr><td>${keyword}</td><td>${count}</td></tr>`;
+                    }
+
+                    keyWordSet.add(keyword, count);
+                    
+                }
+
+                table += "</table>"
+                const variables = {dateTable: table, date: date};
+                response.render("getDatePost", variables);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            await client.close;
+        }
+        
+    }
+});
+
+
+app.set("views", path.resolve(__dirname, "templates"));
+app.set("view engine", "ejs");
 app.listen(portNumber);
-console.log(`Web server started and running at http://localhost:${portNumber}`);

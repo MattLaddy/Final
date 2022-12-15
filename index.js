@@ -1,12 +1,13 @@
 process.stdin.setEncoding("utf8");
 const path = require("path");
-var hn = require('hackernews-api');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const express = require("express"); 
 const app = express();
 const portNumber = 5000;
 const bodyParser = require("body-parser");
 const { response } = require('express');
+
+var hn = require('hackernews-api');
 
 
 app.use(bodyParser.urlencoded({extended:false}));
@@ -61,6 +62,7 @@ async function insert(data) {
 
 function getStoriesBasedOnKey(serach){
     var array = hn.getTopStories();
+ 
     var stories = [];
     for(let i = 0; i < 100; i++){
         let currStory = hn.getItem(array[i]);

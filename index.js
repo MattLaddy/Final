@@ -13,9 +13,9 @@ var hn = require('hackernews-api');
 app.use(bodyParser.urlencoded({extended:false}));
 require("dotenv").config({ path: path.resolve(__dirname, 'credentialsDontPost/.env') })  
 
-const userName = process.env.MONGO_DB_USERNAME;
-const password = process.env.MONGO_DB_PASSWORD;
-const databaseAndCollection = {db: process.env.MONGO_DB_NAME, collection:process.env.MONGO_COLLECTION};
+const userName = "matthewladdy";
+const password = "CMSC335";
+const databaseAndCollection = {db: "CMSC335_DB", collection: "HackerNewsData"};
 const uri = `mongodb+srv://${userName}:${password}@cluster0.qbkiy4o.mongodb.net/test`;;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 

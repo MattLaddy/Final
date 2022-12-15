@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Clear</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<h1>Erase All data from a date </h1>
+<body>
+
+    <form action="/clear" method="post" onsubmit="return confirm('Are you sure you want to delete all data from this date?');">
+        Date: <input type="text" id="date" name="date" placeholder="MM/DD/YYYY"> 
+        <input type="submit" value = "Erase All Data" style="width:120px">
+    </form>
+    <br>
+    <hr>
+    <a href="/"> HOME </a><br>
+</body>
+
